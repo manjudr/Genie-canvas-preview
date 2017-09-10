@@ -1,0 +1,207 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<script>
+var app = angular.module('myApp', []);
+var metadata = undefined;
+var body = undefined;
+var instance = undefined;
+
+app.controller('myCtrl', function($scope, $http, $sce) {
+    $scope.hosts = ['https://dev.ekstep.in', 'https://qa.ekstep.in', 'https://community.ekstep.in'];
+    $scope.selectedHost = 'https://dev.ekstep.in';
+    $scope.authKey = " ";
+    $scope.contentId = "";
+    $scope.config = {
+        'showEndPage': 'true',
+        'showStartPage': 'true'
+    };
+    $scope.context = {
+        'authToken': $scope.authKey,
+        'mode': 'preview',
+        'contentId': $scope.contentId,
+        'host': $scope.selectedHost,
+        'apislug': '/api'
+    };
+
+    if (localStorage.chkbx && localStorage.chkbx != '') {
+        $('#remember_me').attr('checked', 'checked');
+        $scope.authKey = localStorage.authKey;
+    } else {
+        $('#remember_me').removeAttr('checked');
+        $('#authKey').val('');
+    }
+
+    $('#remember_me').click(function() {
+
+        if ($('#remember_me').is(':checked')) {
+            // save username and password
+            localStorage.authKey = $('#authKey').val();
+            localStorage.chkbx = $('#remember_me').val();
+        } else {
+            localStorage.usrname = '';
+            localStorage.pass = '';
+            localStorage.chkbx = '';
+        }
+    });
+    $scope.getMetadata = function(cb) {
+        var headers = {
+            Authorization: $scope.authKey
+        }
+        var req = $http({
+            method: "GET",
+            url: $scope.selectedHost + "/api/content/v3/read/" + $scope.contentId,
+            headers: headers,
+            data: {}
+        });
+        req.then(function(res) {
+            console.info("response", res);
+            cb(res.data.result.content);
+        }).catch(function(err) {
+            cb(err);
+        });
+    };
+
+    $scope.getContentBody = function(cb) {
+        var headers = {
+            Authorization: $scope.authKey
+        }
+        var req = $http({
+            method: "GET",
+            url: $scope.selectedHost + "/api/content/v3/read/" + $scope.contentId + "?fields=body",
+            headers: headers,
+            data: {}
+        });
+        req.then(function(res) {
+            console.info("response", res);
+            cb(res.data.result.content);
+        }).catch(function(err) {
+            cb(err);
+        });
+    };
+
+    $scope.loadPreview = function() {
+        var previewContentIframe = jQuery('#previewContentIframe')[0];
+        previewContentIframe.src = $scope.selectedHost + '/content/preview/preview.html?webview=true';
+        //previewContentIframe.src = 'https://s3.ap-south-1.amazonaws.com/ekstep-public-dev/v3/preview/preview.html?webview=true';
+        previewContentIframe.onload = function() {
+            var configuration = {};
+            var instance = this;
+            configuration.config = $scope.config;
+            configuration.context = $scope.context;
+            if ($scope.body != undefined) {
+                configuration.data = JSON.parse($scope.body);
+            }
+            if ($scope.data != undefined) {
+                configuration.metadata = JSON.parse($scope.metadata);
+            }
+            if (!(configuration.data && configuration.metadata)) {
+                $scope.getMetadata(function(res) {
+                    configuration.metadata = res;
+                    console.info("metadata==", JSON.stringify(res));
+                    $scope.getContentBody(function(resp) {
+                        configuration.data = resp.body || {};
+                        console.info("body", resp.body);
+                        instance.contentWindow.postMessage(configuration, "*");
+                    });
+                });
+            } else {
+                instance.contentWindow.postMessage(configuration, "*");
+            }
+        };
+    }
+});
+</script>
+
+<body ng-app='myApp' ng-controller="myCtrl">
+    <br/>
+    <div class="content-form">
+        <form class="form-inline">
+            <label><b>Content Identifier</b></label>
+            <input type="text" ng-model='contentId' name="contentId" class="form-control">
+            <label><b>AuthKey</b></label>
+            <input type="password" ng-model='authKey' name="authKey" id="authKey" class="form-control">
+            <label class="checkbox">
+                <input type="checkbox" value="remember-me" id="remember_me"> Remember me
+            </label>
+            &nbsp;
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">Config</button>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <label><b>Select Host</b></label>
+            <select class="dropDownMenu" ng-model="selectedHost" ng-options="x for x in hosts">
+            </select>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <button class="btn btn-default" ng-click='loadPreview()'>Show Preview</button>
+        </form>
+    </div>
+    <br/>
+    <hr>
+    <div>
+        <iframe id="previewContentIframe" width=80% height=80%></iframe>
+    </div>
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Preview Configurations</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="comment">Config:</label>
+                        <textarea class="form-control" ng-model="config" rows="3" cols="2" id="config"></textarea>
+                        <label for="comment">Context:</label>
+                        <textarea class="form-control" rows="3" cols="2" ng-model="context" id="context"></textarea>
+                        <label for="comment">Body:</label>
+                        <textarea class="form-control" rows="3" cols="2" id="contentBody" ng-model="body"></textarea>
+                        <label for="comment">MetaData:</label>
+                        <textarea class="form-control" rows="3" cols="2" id="metaData" ng-model="metadata"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" ng-click='loadPreview()' data-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+<style>
+#previewContentIframe {
+    width: 79%;
+    border: none;
+    position: absolute;
+    left: 9%;
+    background: white;
+}
+
+body {
+    background: rgb(237, 237, 237);
+}
+
+.content-form {
+    position: absolute;
+    left: 8%;
+}
+
+.dropDownMenu {
+    background-color: #ffffff;
+    color: black;
+    padding: 6px;
+    font-size: 15px;
+    border: 0.5px solid rgba(128, 128, 128, 0.45);
+    border-radius: 5px;
+    cursor: pointer;
+}
+</style>
+
+</html>
