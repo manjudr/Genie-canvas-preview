@@ -2,7 +2,6 @@ var express = require('express'),
     http = require('http'),
     path = require('path'),
     fs = require('fs'),
-    AWS = require('aws-sdk');
 bodyParser = require('body-parser');
 
 var proxy = require('express-http-proxy');

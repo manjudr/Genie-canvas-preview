@@ -91,7 +91,6 @@ app.controller('myCtrl', function($scope, $http, $sce) {
     $scope.loadPreview = function() {
         var previewContentIframe = jQuery('#previewContentIframe')[0];
         previewContentIframe.src = $scope.selectedHost + '/content/preview/preview.html?webview=true';
-        //previewContentIframe.src = 'https://s3.ap-south-1.amazonaws.com/ekstep-public-dev/v3/preview/preview.html?webview=true';
         previewContentIframe.onload = function() {
             var configuration = {};
             var instance = this;
@@ -190,7 +189,7 @@ body {
 
 .content-form {
     position: absolute;
-    left: 8%;
+    left: 4%;
 }
 
 .dropDownMenu {
