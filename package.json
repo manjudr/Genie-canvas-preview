@@ -1,7 +1,7 @@
 {
-  "name": "tes",
+  "name": "org.ekstep.preview",
   "version": "1.0.1",
-  "description": "",
+  "description": "It will help you to render a contents in local server",
   "main": "index.js",
   "dependencies": {
     "body-parser": "^1.17.2",
@@ -12,6 +12,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Manjunath Davanam",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manjudr/Genie-canvas-Local-preview.git"
+  },
+  "keywords": [
+    "preview",
+    "geniecanvas",
+    "local",
+    "genie-canvas"
+  ],
+  "bugs": {
+    "url": "https://github.com/manjudr/Genie-canvas-Local-preview/issues"
+  },
+  "homepage": "https://github.com/manjudr/Genie-canvas-Local-preview#readme"
 }
