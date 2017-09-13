@@ -1,6 +1,6 @@
 {
   "name": "org.ekstep.preview",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "It will help you to render a contents in local server",
   "main": "index.js",
   "dependencies": {
